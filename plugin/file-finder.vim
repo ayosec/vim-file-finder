@@ -2,10 +2,6 @@
 " Maintainer:  Ayose Cazorla <ayosec@gmail.com>
 " Last Change: 2011 Nov 28
 
-if !exists("g:filefinder_ignore")
-  let g:filefinder_ignore = ['/\.git/]', '\.\(class\|png\|jar\)$']
-endif
-
 if !exists("g:filefinder_sort")
   let g:filefinder_sort = "FFSortByOldFiles"
 endif
@@ -73,9 +69,9 @@ function! OpenFileFinder()
 endfunction
 
 function! FFGenerateFileList()
-  " Generate file list. Exclude directories and files matching b:filefinder_ignore
+  " Generate file list. Excludie directories.
+  " Use wildignore to exclude files
   let b:foundfiles = []
-  let ignorepattern = join(map(copy(g:filefinder_ignore), '''\('' . v:val . ''\)'''), '\|')
 
   " Sort them
   let l:files = split(globpath(b:rootdirectory, "**"), "\n")
@@ -86,10 +82,7 @@ function! FFGenerateFileList()
       if stridx(item, b:rootdirectory) == 0
         let item = strpart(item, len(b:rootdirectory))
       endif
-
-      if match(item, ignorepattern) == -1
-        call add(b:foundfiles, item)
-      endif
+      call add(b:foundfiles, item)
     endif
   endfor
 endfunction
