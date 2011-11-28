@@ -6,6 +6,10 @@ if !exists("g:filefinder_ignore")
   let g:filefinder_ignore = ['/\.git/]', '\.\(class\|png\|jar\)$']
 end
 
+if !exists("g:filefinder_sort")
+  let g:filefinder_sort = "FFSortByOldFiles"
+end
+
 function! OpenFileFinder()
 
   if !empty(bufname("%")) || getbufvar("%", "&modified")
@@ -20,11 +24,15 @@ function! OpenFileFinder()
     let b:rootdirectory .= "/"
   endif
 
-
-  " Generate file list
+  " Generate file list. Exclude directories and files matching b:filefinder_ignore
   let b:foundfiles = []
   let ignorepattern = join(map(copy(g:filefinder_ignore), '''\('' . v:val . ''\)'''), '\|')
-  for item in split(globpath(b:rootdirectory, "**"), "\n")
+
+  " Sort them
+  let l:files = split(globpath(b:rootdirectory, "**"), "\n")
+  call sort(files, g:filefinder_sort)
+
+  for item in l:files
     if isdirectory(item) == 0
       if stridx(item, b:rootdirectory) == 0
         let item = strpart(item, len(b:rootdirectory))
@@ -155,6 +163,50 @@ function! FFMoveSelection(offset)
     normal 0r>
   end
   call setpos('.', oldpos)
+endfunction
+
+function! FFSortByName(a, b)
+  if a:a > a:b
+    return 1
+  elseif a:a < a:b
+    return -1
+  end
+  return 0
+endfunction
+
+function! FFSortByOldFiles(a, b)
+  let pa = index(v:oldfiles, a:a)
+  let pb = index(v:oldfiles, a:b)
+  if pa == pb
+    return FFSortByName(a:a, a:b)
+  elseif pa == -1 || (pb != -1 && pb < pa)
+    return 1
+  elseif pb == -1 || (pb != -1 && pa < pb)
+    return -1
+  endif
+endfunction
+
+function! FFSortByMTime(a, b)
+  let va = getftime(a:a)
+  let vb = getftime(a:b)
+  if va == -1 && vb != -1
+    return 1
+  elseif vb == -1 && va != -1
+    return -1
+  end
+  return vb - va
+endfunction
+
+function! FFSortByOldFiles(a, b)
+  let pa = index(v:oldfiles, a:a)
+  let pb = index(v:oldfiles, a:b)
+  if pa == pb
+    return FFSortByName(a:a, a:b)
+  elseif pa == -1 || (pb != -1 && pb < pa)
+    return 1
+  elseif pb == -1 || (pb != -1 && pa < pb)
+    return -1
+  endif
 endfunction
 
 noremap <leader>o :call OpenFileFinder()<Cr>
