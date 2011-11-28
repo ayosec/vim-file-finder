@@ -54,7 +54,7 @@ function! OpenFileFinder()
   " Timer to update the file list.
   " The timer is a trick using the CursorHoldI event and a fake key combination
   inoremap <buffer> \\ <C-o>:call FFUpdateContent()<Cr>
-  setlocal updatetime=20
+  setlocal updatetime=50
   au CursorHoldI <buffer> call feedkeys("\\\\")
   "au CursorHold <buffer> :bd
 
