@@ -6,6 +6,11 @@ if !exists("g:filefinder_sort")
   let g:filefinder_sort = "FFSortByOldFiles"
 endif
 
+if !exists("g:filefinder_filter")
+  let g:filefinder_filter = "FFMatchWithPatterns"
+endif
+
+
 function! OpenFileFinder()
 
   if !empty(bufname("%")) || getbufvar("%", "&modified")
@@ -115,27 +120,16 @@ function! FFUpdateContent()
   " Erase old results, if any
   let oldpos = getpos(".")
   if line("$") > 1
-    exe "2,$d"
+    2,$d
   endif
 
   " Search the files with the new pattern
-  let patterns = split(currentpattern, "  *")
-  let rootdirectorylength = len(b:rootdirectory)
-  if len(patterns) > 0
-    for item in b:foundfiles
-      let allmatches = 1
-      for pattern in patterns
-        if match(item, pattern) == -1
-          let allmatches = 0
-          break
-        endif
-      endfor
-
-      if allmatches == 1
-        call append(line("$"), "  " . item)
-      endif
-    endfor
-  endif
+  let s:filterfn = function(g:filefinder_filter)
+  for item in b:foundfiles
+    if call(s:filterfn, [l:currentpattern, item])
+      call append(line("$"), "  " . item)
+    endif
+  endfor
 
   if line("$") > 1
     normal 2G0r>
@@ -155,6 +149,15 @@ function! FFOpenSelectedFile()
     echom "Open " . selectedfile . " in a new tab"
     exe "tabnew " . selectedfile
   endif
+endfunction
+
+function! FFMatchWithPatterns(currentpattern, filename)
+  for pattern in split(a:currentpattern, "  *")
+    if match(a:filename, pattern) == -1
+      return 0
+    endif
+  endfor
+  return 1
 endfunction
 
 function! FFChangeSort(sortname)
