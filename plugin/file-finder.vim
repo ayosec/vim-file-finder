@@ -4,17 +4,17 @@
 
 if !exists("g:filefinder_ignore")
   let g:filefinder_ignore = ['/\.git/]', '\.\(class\|png\|jar\)$']
-end
+endif
 
 if !exists("g:filefinder_sort")
   let g:filefinder_sort = "FFSortByOldFiles"
-end
+endif
 
 function! OpenFileFinder()
 
   if !empty(bufname("%")) || getbufvar("%", "&modified")
     tabnew
-  end
+  endif
 
   let b:prevpattern = ""
 
@@ -24,25 +24,7 @@ function! OpenFileFinder()
     let b:rootdirectory .= "/"
   endif
 
-  " Generate file list. Exclude directories and files matching b:filefinder_ignore
-  let b:foundfiles = []
-  let ignorepattern = join(map(copy(g:filefinder_ignore), '''\('' . v:val . ''\)'''), '\|')
-
-  " Sort them
-  let l:files = split(globpath(b:rootdirectory, "**"), "\n")
-  call sort(files, g:filefinder_sort)
-
-  for item in l:files
-    if isdirectory(item) == 0
-      if stridx(item, b:rootdirectory) == 0
-        let item = strpart(item, len(b:rootdirectory))
-      endif
-
-      if match(item, ignorepattern) == -1
-        call add(b:foundfiles, item)
-      end
-    endif
-  endfor
+  call FFGenerateFileList()
 
   " Dialog-like buffer
   file \<File\ selector\>
@@ -71,6 +53,11 @@ function! OpenFileFinder()
   inoremap <buffer> <Up> <C-o>:call FFMoveSelection(-1)<Cr>
   inoremap <buffer> <Down> <C-o>:call FFMoveSelection(1)<Cr>
 
+  " Sorting
+  inoremap <buffer> <F5> <C-o>:call FFChangeSort("Name")<Cr>
+  inoremap <buffer> <F6> <C-o>:call FFChangeSort("MTime")<Cr>
+  inoremap <buffer> <F7> <C-o>:call FFChangeSort("OldFiles")<Cr>
+
   " Don't keep the buffer if the focus is lost or <C-c> is pressed
   inoremap <buffer> <C-c> <Esc>:bd<Cr>
   nnoremap <buffer> <C-c> :bd<Cr>
@@ -85,8 +72,30 @@ function! OpenFileFinder()
 
 endfunction
 
+function! FFGenerateFileList()
+  " Generate file list. Exclude directories and files matching b:filefinder_ignore
+  let b:foundfiles = []
+  let ignorepattern = join(map(copy(g:filefinder_ignore), '''\('' . v:val . ''\)'''), '\|')
+
+  " Sort them
+  let l:files = split(globpath(b:rootdirectory, "**"), "\n")
+  call sort(files, g:filefinder_sort)
+
+  for item in l:files
+    if isdirectory(item) == 0
+      if stridx(item, b:rootdirectory) == 0
+        let item = strpart(item, len(b:rootdirectory))
+      endif
+
+      if match(item, ignorepattern) == -1
+        call add(b:foundfiles, item)
+      endif
+    endif
+  endfor
+endfunction
+
 function! FFStatusLine()
-  return "Showing " . (getpos("$")[1] - 1) . " files of " . len(b:foundfiles) . " in " . b:rootdirectory
+  return "[" . g:filefinder_sort . "] Showing " . (getpos("$")[1] - 1) . " files of " . len(b:foundfiles) . " in " . b:rootdirectory
 endfunction
 
 function! FFUpdateContent()
@@ -98,11 +107,11 @@ function! FFUpdateContent()
   if l:currentpattern[len(l:currentpattern) - 1] != ' '
     let l:currentpattern .= " "
     call setline(1, l:currentpattern)
-  end
+  endif
 
   if b:prevpattern == l:currentpattern
     return
-  end
+  endif
   let b:prevpattern = l:currentpattern
 
   " Erase old results, if any
@@ -126,13 +135,13 @@ function! FFUpdateContent()
 
       if allmatches == 1
         call append(line("$"), "  " . item)
-      end
+      endif
     endfor
-  end
+  endif
 
   if line("$") > 1
     normal 2G0r>
-  end
+  endif
 
   " Ensure the cursor is always in the first line
   let oldpos[1] = 1
@@ -147,7 +156,15 @@ function! FFOpenSelectedFile()
     bd
     echom "Open " . selectedfile . " in a new tab"
     exe "tabnew " . selectedfile
-  end
+  endif
+endfunction
+
+function! FFChangeSort(sortname)
+  let g:filefinder_sort = "FFSortBy" . a:sortname
+  let b:prevpattern = ""
+
+  call FFGenerateFileList()
+  call FFUpdateContent()
 endfunction
 
 function! FFMoveSelection(offset)
@@ -158,10 +175,10 @@ function! FFMoveSelection(offset)
 
     if line(".") < 2
       normal 2G
-    end
+    endif
 
     normal 0r>
-  end
+  endif
   call setpos('.', oldpos)
 endfunction
 
@@ -170,7 +187,7 @@ function! FFSortByName(a, b)
     return 1
   elseif a:a < a:b
     return -1
-  end
+  endif
   return 0
 endfunction
 
@@ -193,7 +210,7 @@ function! FFSortByMTime(a, b)
     return 1
   elseif vb == -1 && va != -1
     return -1
-  end
+  endif
   return vb - va
 endfunction
 
