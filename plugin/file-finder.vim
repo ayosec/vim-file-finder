@@ -93,6 +93,11 @@ endfunction
 
 function! FFUpdateContent()
 
+  " Force the cursor to stay in the first line
+  if line(".") > 1
+    normal gg
+  end
+
   " Avoid update the list if the pattern is unmodified
   let l:currentpattern = getline(1)
 
