@@ -147,7 +147,7 @@ function! FFOpenSelectedFile()
     let selectedfile = strpart(getline("."), 2)
     bd
     echom "Open " . selectedfile . " in a new tab"
-    exe "tabnew " . selectedfile
+    exe "tabnew " . fnameescape(selectedfile)
   endif
 endfunction
 
