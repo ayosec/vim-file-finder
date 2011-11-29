@@ -18,6 +18,7 @@ function! OpenFileFinder()
   endif
 
   let b:prevpattern = ""
+  let b:hiddenlines = ""
 
   " Root directory. Ensure the name is finished with an slash
   let b:rootdirectory = getcwd()
@@ -53,6 +54,14 @@ function! OpenFileFinder()
   inoremap <buffer> <Cr> <Esc>:call FFOpenSelectedFile()<Cr>
   inoremap <buffer> <Up> <C-o>:call FFMoveSelection(-1)<Cr>
   inoremap <buffer> <Down> <C-o>:call FFMoveSelection(1)<Cr>
+  inoremap <buffer> <PageUp> <C-o>:call FFMoveSelection(-winheight("."))<Cr>
+  inoremap <buffer> <PageDown> <C-o>:call FFMoveSelection(winheight("."))<Cr>
+
+  nnoremap <buffer> <Cr> :call FFOpenSelectedFile()<Cr>
+  nnoremap <buffer> <Up> :call FFMoveSelection(-1)<Cr>
+  nnoremap <buffer> <Down> :call FFMoveSelection(1)<Cr>
+  nnoremap <buffer> <PageUp> :call FFMoveSelection(-winheight("."))<Cr>
+  nnoremap <buffer> <PageDown> :call FFMoveSelection(winheight("."))<Cr>
 
   " Sorting
   inoremap <buffer> <F5> <C-o>:call FFChangeSort("Name")<Cr>
@@ -115,7 +124,10 @@ function! FFUpdateContent()
   if b:prevpattern == l:currentpattern
     return
   endif
+
+  " New state
   let b:prevpattern = l:currentpattern
+  let b:hiddenlines = ""
 
   " Erase old results, if any
   let oldpos = getpos(".")
@@ -170,16 +182,35 @@ endfunction
 
 function! FFMoveSelection(offset)
   let oldpos = getpos(".")
+  let oldreg = @h
+
+  " Restore hidden lines
+  if len(b:hiddenlines) > 0
+    let @h = b:hiddenlines
+    let b:hiddenlines = ""
+
+    normal gg"hp
+  end
+
   if search("^>") > 0
     s/^>/ /
-    exe "normal " . (line(".") + a:offset) . "G"
+    exe "normal " . max([2, line(".") + a:offset]) . "G"
 
     if line(".") < 2
       normal 2G
     endif
 
     normal 0r>
+
+    " Ensure the selected file is visible
+    let winoffset = line(".") - winheight(".")
+    if winoffset > 0
+      exe 'normal 2G"h' . winoffset . 'dd'
+      let b:hiddenlines = @h
+    end
   endif
+
+  let @h = oldreg
   call setpos('.', oldpos)
 endfunction
 
