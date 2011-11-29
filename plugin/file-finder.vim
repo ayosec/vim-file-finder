@@ -141,10 +141,10 @@ endfunction
 function! FFOpenSelectedFile()
   normal gg
   if search("^>") > 0
-    let selectedfile = strpart(getline("."), 2)
+    let selectedfile = fnameescape(b:rootdirectory . strpart(getline("."), 2))
     bd
     echom "Open " . selectedfile . " in a new tab"
-    exe "tabnew " . fnameescape(selectedfile)
+    exe "tabnew " . selectedfile
   endif
 endfunction
 
