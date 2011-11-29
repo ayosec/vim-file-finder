@@ -19,6 +19,7 @@ function! OpenFileFinder()
 
   let b:prevpattern = ""
   let b:hiddenlines = ""
+  let b:resultslength = 0
 
   " Root directory. Ensure the name is finished with an slash
   let b:rootdirectory = getcwd()
@@ -104,7 +105,7 @@ function! FFGenerateFileList()
 endfunction
 
 function! FFStatusLine()
-  return "[" . g:filefinder_sort . " | " . g:filefinder_filter . "] Showing " . (getpos("$")[1] - 1) . " files of " . len(b:foundfiles) . " in " . b:rootdirectory
+  return "[" . g:filefinder_sort . " | " . g:filefinder_filter . "] [" . b:resultslength . "/" . len(b:foundfiles) . "] %=" . b:rootdirectory
 endfunction
 
 function! FFUpdateContent()
@@ -139,9 +140,11 @@ function! FFUpdateContent()
 
   " Search the files with the new pattern
   let s:filterfn = function(g:filefinder_filter)
+  let b:resultslength = 0
   for item in b:foundfiles
     if call(s:filterfn, [l:currentpattern, item])
       call append(line("$"), "  " . item)
+      let b:resultslength += 1
     endif
   endfor
 
