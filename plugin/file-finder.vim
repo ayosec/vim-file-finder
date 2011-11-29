@@ -89,10 +89,20 @@ function! OpenFileFinder()
 
   call FFGenerateFileList()
 
+  " Users can have their own definitions with the autocmd
+  doautocmd User FileFinderConfigure
+
   " Time to find files!
   startinsert
 
 endfunction
+
+augroup FFEmptyAutoCmds
+  " If there is no autocmd to User/FileFinderConfigure Vim will show an error
+  " This trick is just to avoid that
+  au!
+  au User FileFinderConfigure call line(".") " pseudo-nop
+augroup END
 
 " }}}
 
