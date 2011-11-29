@@ -1,6 +1,8 @@
 " Vim File Finder
 " Maintainer:  Ayose Cazorla <ayosec@gmail.com>
-" Last Change: 2011 Nov 28
+" Last Change: 2011 Nov 29
+
+" Global variables: {{{
 
 if !exists("g:filefinder_sort")
   let g:filefinder_sort = "FFSortByOldFiles"
@@ -10,6 +12,9 @@ if !exists("g:filefinder_filter")
   let g:filefinder_filter = "FFFilterMatchWithPatterns"
 endif
 
+" }}}
+
+" Main function: {{{
 
 function! OpenFileFinder()
 
@@ -21,13 +26,15 @@ function! OpenFileFinder()
   let b:hiddenlines = ""
   let b:resultslength = 0
 
-  " Root directory. Ensure the name is finished with an slash
-  let b:rootdirectory = getcwd()
-  if b:rootdirectory[len(b:rootdirectory) - 1] != "/"
-    let b:rootdirectory .= "/"
-  endif
-
-  call FFGenerateFileList()
+  " Root directory. The name has to finish with an slash
+  if exists("g:filefinder_rootdir")
+    let b:rootdirectory = g:filefinder_rootdir
+  else
+    let b:rootdirectory = getcwd()
+    if b:rootdirectory[len(b:rootdirectory) - 1] != "/"
+      let b:rootdirectory .= "/"
+    endif
+  end
 
   " Dialog-like buffer
   file \<File\ selector\>
@@ -64,7 +71,7 @@ function! OpenFileFinder()
   nnoremap <buffer> <PageUp> :call FFMoveSelection(-winheight("."))<Cr>
   nnoremap <buffer> <PageDown> :call FFMoveSelection(winheight("."))<Cr>
 
-  " Sorting
+  " Sorting and filtering
   inoremap <buffer> <F5> <C-o>:call FFChangeSort("Name")<Cr>
   inoremap <buffer> <F6> <C-o>:call FFChangeSort("MTime")<Cr>
   inoremap <buffer> <F7> <C-o>:call FFChangeSort("OldFiles")<Cr>
@@ -80,13 +87,23 @@ function! OpenFileFinder()
   " Append blank spaces to the EOL to make easier to restore the cursor position after update the buffer content
   1s/$/ /
 
+  call FFGenerateFileList()
+
   " Time to find files!
   startinsert
 
 endfunction
 
+" }}}
+
+" UI: {{{
+
+function! FFStatusLine()
+  return "[" . g:filefinder_sort . " | " . g:filefinder_filter . "] [" . b:resultslength . "/" . len(b:foundfiles) . "] %=" . b:rootdirectory
+endfunction
+
 function! FFGenerateFileList()
-  " Generate file list. Excludie directories.
+  " Generate file list. Exclude directories.
   " Use wildignore to exclude files
   let b:foundfiles = []
 
@@ -104,9 +121,55 @@ function! FFGenerateFileList()
   endfor
 endfunction
 
-function! FFStatusLine()
-  return "[" . g:filefinder_sort . " | " . g:filefinder_filter . "] [" . b:resultslength . "/" . len(b:foundfiles) . "] %=" . b:rootdirectory
+function! FFRefreshContent()
+  let b:prevpattern = ""
+
+  call FFGenerateFileList()
+  call FFUpdateContent()
 endfunction
+
+function! FFOpenSelectedFile()
+  normal gg
+  if search("^>") > 0
+    let selectedfile = strpart(getline("."), 2)
+    bd
+    echom "Open " . selectedfile . " in a new tab"
+    exe "tabnew " . fnameescape(selectedfile)
+  endif
+endfunction
+
+function! FFMoveSelection(offset)
+  let oldpos = getpos(".")
+  let oldreg = @h
+
+  " Restore hidden lines
+  if len(b:hiddenlines) > 0
+    let @h = b:hiddenlines
+    let b:hiddenlines = ""
+
+    normal gg"hp
+  end
+
+  if search("^>") > 0
+    s/^>/ /
+    exe "normal " . max([2, line(".") + a:offset]) . "G"
+    normal 0r>
+
+    " Ensure the selected file is visible
+    let winoffset = line(".") - winheight(".")
+    if winoffset > 0
+      exe 'normal 2G"h' . winoffset . 'dd'
+      let b:hiddenlines = @h
+    end
+  endif
+
+  let @h = oldreg
+  call setpos('.', oldpos)
+endfunction
+
+" }}}
+
+" Update content: {{{
 
 function! FFUpdateContent()
 
@@ -115,7 +178,6 @@ function! FFUpdateContent()
     normal gg
   end
 
-  " Avoid update the list if the pattern is unmodified
   let l:currentpattern = getline(1)
 
   " Ensure spaces at the EOL
@@ -124,6 +186,7 @@ function! FFUpdateContent()
     call setline(1, l:currentpattern)
   endif
 
+  " Avoid to update the list if the pattern is unmodified
   if b:prevpattern == l:currentpattern
     return
   endif
@@ -140,13 +203,14 @@ function! FFUpdateContent()
 
   " Search the files with the new pattern
   let s:filterfn = function(g:filefinder_filter)
-  let b:resultslength = 0
   for item in b:foundfiles
     if call(s:filterfn, [l:currentpattern, item])
       call append(line("$"), "  " . item)
-      let b:resultslength += 1
     endif
   endfor
+
+  " Cache the size to show it in the statusline
+  let b:resultslength = line("$") - 1
 
   if line("$") > 1
     normal 2G0r>
@@ -158,14 +222,13 @@ function! FFUpdateContent()
   startinsert
 endfunction
 
-function! FFOpenSelectedFile()
-  normal 1G
-  if search("^>") > 0
-    let selectedfile = strpart(getline("."), 2)
-    bd
-    echom "Open " . selectedfile . " in a new tab"
-    exe "tabnew " . fnameescape(selectedfile)
-  endif
+" }}}
+
+" Filter methods: {{{
+
+function! FFChangeFilter(filtername)
+  let g:filefinder_filter = "FFFilter" . a:filtername
+  call FFRefreshContent()
 endfunction
 
 function! FFFilterMatchWithPatterns(currentpattern, filename)
@@ -195,56 +258,13 @@ function! FFFilterMatchWithLetters(currentpattern, filename)
   return 1
 endfunction
 
+" }}}
+
+" Sort methods: {{{
 
 function! FFChangeSort(sortname)
   let g:filefinder_sort = "FFSortBy" . a:sortname
   call FFRefreshContent()
-endfunction
-
-function! FFChangeFilter(filtername)
-  let g:filefinder_filter = "FFFilter" . a:filtername
-  call FFRefreshContent()
-endfunction
-
-function! FFRefreshContent()
-  let b:prevpattern = ""
-
-  call FFGenerateFileList()
-  call FFUpdateContent()
-endfunction
-
-function! FFMoveSelection(offset)
-  let oldpos = getpos(".")
-  let oldreg = @h
-
-  " Restore hidden lines
-  if len(b:hiddenlines) > 0
-    let @h = b:hiddenlines
-    let b:hiddenlines = ""
-
-    normal gg"hp
-  end
-
-  if search("^>") > 0
-    s/^>/ /
-    exe "normal " . max([2, line(".") + a:offset]) . "G"
-
-    if line(".") < 2
-      normal 2G
-    endif
-
-    normal 0r>
-
-    " Ensure the selected file is visible
-    let winoffset = line(".") - winheight(".")
-    if winoffset > 0
-      exe 'normal 2G"h' . winoffset . 'dd'
-      let b:hiddenlines = @h
-    end
-  endif
-
-  let @h = oldreg
-  call setpos('.', oldpos)
 endfunction
 
 function! FFSortByName(a, b)
@@ -279,16 +299,8 @@ function! FFSortByMTime(a, b)
   return vb - va
 endfunction
 
-function! FFSortByOldFiles(a, b)
-  let pa = index(v:oldfiles, a:a)
-  let pb = index(v:oldfiles, a:b)
-  if pa == pb
-    return FFSortByName(a:a, a:b)
-  elseif pa == -1 || (pb != -1 && pb < pa)
-    return 1
-  elseif pb == -1 || (pb != -1 && pa < pb)
-    return -1
-  endif
-endfunction
+" }}}
 
 noremap <leader>o :call OpenFileFinder()<Cr>
+
+" vim: fdm=marker sw=2 sts=2
