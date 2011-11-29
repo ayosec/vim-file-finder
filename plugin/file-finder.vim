@@ -7,7 +7,7 @@ if !exists("g:filefinder_sort")
 endif
 
 if !exists("g:filefinder_filter")
-  let g:filefinder_filter = "FFMatchWithPatterns"
+  let g:filefinder_filter = "FFFilterMatchWithPatterns"
 endif
 
 
@@ -67,6 +67,8 @@ function! OpenFileFinder()
   inoremap <buffer> <F5> <C-o>:call FFChangeSort("Name")<Cr>
   inoremap <buffer> <F6> <C-o>:call FFChangeSort("MTime")<Cr>
   inoremap <buffer> <F7> <C-o>:call FFChangeSort("OldFiles")<Cr>
+  inoremap <buffer> <F8> <C-o>:call FFChangeFilter("MatchWithLetters")<Cr>
+  inoremap <buffer> <F9> <C-o>:call FFChangeFilter("MatchWithPatterns")<Cr>
 
   " Don't keep the buffer if the focus is lost or <C-c> is pressed
   inoremap <buffer> <C-c> <Esc>:bd<Cr>
@@ -102,7 +104,7 @@ function! FFGenerateFileList()
 endfunction
 
 function! FFStatusLine()
-  return "[" . g:filefinder_sort . "] Showing " . (getpos("$")[1] - 1) . " files of " . len(b:foundfiles) . " in " . b:rootdirectory
+  return "[" . g:filefinder_sort . " | " . g:filefinder_filter . "] Showing " . (getpos("$")[1] - 1) . " files of " . len(b:foundfiles) . " in " . b:rootdirectory
 endfunction
 
 function! FFUpdateContent()
@@ -163,7 +165,7 @@ function! FFOpenSelectedFile()
   endif
 endfunction
 
-function! FFMatchWithPatterns(currentpattern, filename)
+function! FFFilterMatchWithPatterns(currentpattern, filename)
   for pattern in split(a:currentpattern, "  *")
     if match(a:filename, pattern) == -1
       return 0
@@ -172,8 +174,36 @@ function! FFMatchWithPatterns(currentpattern, filename)
   return 1
 endfunction
 
+function! FFFilterMatchWithLetters(currentpattern, filename)
+  let pattern = substitute(a:currentpattern, "[[:space:]]*", "", "g")
+  let patternlen = len(pattern)
+  let filename = a:filename
+  let l:i = 0
+  let lastidx = 0
+  while l:i < patternlen
+    let lastidx = match(filename, '\c' . pattern[l:i], lastidx) + 1
+
+    if lastidx == 0
+      return 0
+    endif
+
+    let l:i += 1
+  endwhile
+  return 1
+endfunction
+
+
 function! FFChangeSort(sortname)
   let g:filefinder_sort = "FFSortBy" . a:sortname
+  call FFRefreshContent()
+endfunction
+
+function! FFChangeFilter(filtername)
+  let g:filefinder_filter = "FFFilter" . a:filtername
+  call FFRefreshContent()
+endfunction
+
+function! FFRefreshContent()
   let b:prevpattern = ""
 
   call FFGenerateFileList()
