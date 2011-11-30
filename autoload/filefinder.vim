@@ -43,11 +43,30 @@ function! filefinder#open()
   au BufLeave <buffer> let &updatetime = b:oldupdatetime
   au BufLeave <buffer> let &laststatus = b:oldlaststatus
 
+  " The most-recent-access is built with the current buffers and the v:oldfiles (marks)
+  " We have to create this list before create the new tab
+  let l:recentfiles = []
+  call add(l:recentfiles, expand('%:p'))
+  call add(l:recentfiles, expand('#:p'))
+  for l:i in range(bufnr("$"))
+    let bufpath = expand('#' . l:i . ':p')
+    if !empty(bufpath)
+      call add(l:recentfiles, bufpath)
+    endif
+  endfor
+
+  " Append the v:oldfiles to our list of open files
+  call extend(l:recentfiles, v:oldfiles)
+
   " Reuse the current buffer if it is empty. If not, create a new tab
   if !s:currentbufferisempty()
     tabnew
   endif
 
+  " Save our list in a variable buffer (once the new buffer (tabnew) is created)
+  let b:recentfiles = l:recentfiles
+
+  " State
   let b:prevpattern = ""
   let b:hiddenlines = ""
   let b:resultslength = 0
@@ -362,7 +381,7 @@ function! s:indexforsorting(list, item)
 endfunction
 
 function! filefinder#sortbyoldfiles(a, b)
-  return s:indexforsorting(v:oldfiles, a:a) - s:indexforsorting(v:oldfiles, a:b)
+  return s:indexforsorting(b:recentfiles, a:a) - s:indexforsorting(b:recentfiles, a:b)
 endfunction
 
 function! filefinder#sortbymtime(a, b)
