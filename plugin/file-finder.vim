@@ -281,16 +281,13 @@ function! FFSortByName(a, b)
   return 0
 endfunction
 
+function! s:indexforsorting(list, item)
+  let idx = index(a:list, a:item)
+  return idx == -1 ? len(a:list) + 1 : idx
+endfunction
+
 function! FFSortByOldFiles(a, b)
-  let pa = index(v:oldfiles, a:a)
-  let pb = index(v:oldfiles, a:b)
-  if pa == pb
-    return FFSortByName(a:a, a:b)
-  elseif pa == -1 || (pb != -1 && pb < pa)
-    return 1
-  elseif pb == -1 || (pb != -1 && pa < pb)
-    return -1
-  endif
+  return s:indexforsorting(v:oldfiles, a:a) - s:indexforsorting(v:oldfiles, a:b)
 endfunction
 
 function! FFSortByMTime(a, b)
