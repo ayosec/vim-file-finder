@@ -60,9 +60,11 @@ function! filefinder#open()
 
   " Colors
   setlocal cursorline
-  syn region SelectedFile start='>' end='$'
+  syn region SelectedFile start='^>' end='$'
+  syn region ErrorMessage start='^!' end='$'
   hi CursorLine cterm=NONE ctermbg=darkgray ctermfg=white guibg=darkgray guifg=white
   hi SelectedFile cterm=NONE ctermbg=blue ctermfg=white guibg=blue guifg=white
+  hi def link ErrorMessage Error
 
   " Timer to update the file list.
   " The timer is a trick using the CursorHoldI event and a fake key combination
@@ -227,22 +229,28 @@ function! filefinder#updatecontent()
 
   " Erase old results, if any
   let oldpos = getpos(".")
-  if line("$") > 1
-    2,$d
-  endif
+  silent! 2,$d
 
   " Search the files with the new pattern
   let s:filterfn = function(g:filefinder#filter)
-  for item in b:foundfiles
-    if call(s:filterfn, [l:currentpattern, item])
-      call append(line("$"), "  " . item)
-    endif
-  endfor
+  let succeed = 1
+  try
+    for item in b:foundfiles
+      if call(s:filterfn, [l:currentpattern, item])
+        call append(line("$"), "  " . item)
+      endif
+    endfor
+  catch
+    call setline(2, '!' . v:exception)
+    silent! 3,$d
+
+    let succeed = 0
+  endtry
 
   " Cache the size to show it in the statusline
   let b:resultslength = line("$") - 1
 
-  if line("$") > 1
+  if succeed && line("$") > 1
     normal 2G0r>
   endif
 
