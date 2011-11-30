@@ -12,6 +12,19 @@ if !exists("g:filefinder_filter")
   let g:filefinder_filter = "FFFilterMatchWithPatterns"
 endif
 
+if !exists("g:filefinder_sortmethods")
+  let g:filefinder_sortmethods = {}
+  let g:filefinder_sortmethods['FFSortByName'] = 'Name'
+  let g:filefinder_sortmethods['FFSortByMTime'] = 'Mod time'
+  let g:filefinder_sortmethods['FFSortByOldFiles'] = 'Last access'
+endif
+
+if !exists("g:filefinder_filtermethods")
+  let g:filefinder_filtermethods = {}
+  let g:filefinder_filtermethods["FFFilterMatchWithLetters"] = "Letters"
+  let g:filefinder_filtermethods["FFFilterMatchWithPatterns"] = "Patterns"
+endif
+
 " }}}
 
 " Main function: {{{
@@ -72,11 +85,8 @@ function! OpenFileFinder()
   nnoremap <buffer> <PageDown> :call FFMoveSelection(winheight("."))<Cr>
 
   " Sorting and filtering
-  inoremap <buffer> <F5> <C-o>:call FFChangeSort("Name")<Cr>
-  inoremap <buffer> <F6> <C-o>:call FFChangeSort("MTime")<Cr>
-  inoremap <buffer> <F7> <C-o>:call FFChangeSort("OldFiles")<Cr>
-  inoremap <buffer> <F8> <C-o>:call FFChangeFilter("MatchWithLetters")<Cr>
-  inoremap <buffer> <F9> <C-o>:call FFChangeFilter("MatchWithPatterns")<Cr>
+  inoremap <buffer> <C-d> <C-o>:call FFChangeSort()<Cr>
+  inoremap <buffer> <C-f> <C-o>:call FFChangeFilter()<Cr>
 
   " Don't keep the buffer if the focus is lost or <C-c> is pressed
   inoremap <buffer> <C-c> <Esc>:bd<Cr>
@@ -85,14 +95,15 @@ function! OpenFileFinder()
   "au InsertLeave <buffer> :bd
 
   " Append blank spaces to the EOL to make easier to restore the cursor position after update the buffer content
-  1s/$/ /
-
-  call FFGenerateFileList()
+  1s/$/    /
+  normal 0
 
   if exists("#User#FileFinderConfigure")
     " Users can have their own definitions with the autocmd
     doautocmd User FileFinderConfigure
   endif
+
+  call FFGenerateFileList()
 
   " Time to find files!
   startinsert
@@ -104,7 +115,21 @@ endfunction
 " UI: {{{
 
 function! FFStatusLine()
-  return "[" . g:filefinder_sort . " | " . g:filefinder_filter . "] [" . b:resultslength . "/" . len(b:foundfiles) . "] %=" . b:rootdirectory
+  let content = "["
+
+  " Selected sort method
+  let content .= "[ <C-d> Sort: " . get(g:filefinder_sortmethods, g:filefinder_sort, g:filefinder_sort) . " | "
+
+  " Selected filter method
+  let content .= "<C-f> Filter: " . get(g:filefinder_filtermethods, g:filefinder_filter, g:filefinder_filter) . " ] "
+
+  " Counters (matches / available files)
+  let content .= " [" . b:resultslength . "/" . len(b:foundfiles) . "] "
+
+  " Root directory, right aligned
+  let content .= "%=" . b:rootdirectory
+
+  return content
 endfunction
 
 function! FFGenerateFileList()
@@ -227,14 +252,24 @@ function! FFUpdateContent()
   startinsert
 endfunction
 
+function! s:cyclenext(list, item)
+  let idx = index(a:list, a:item) + 1
+  return a:list[idx >= len(a:list) ? 0 : idx]
+endfunction
+
+function! FFChangeSort()
+  let g:filefinder_sort = s:cyclenext(keys(g:filefinder_sortmethods), g:filefinder_sort)
+  call FFRefreshContent()
+endfunction
+
+function! FFChangeFilter()
+  let g:filefinder_filter =  s:cyclenext(keys(g:filefinder_filtermethods), g:filefinder_filter)
+  call FFRefreshContent()
+endfunction
+
 " }}}
 
 " Filter methods: {{{
-
-function! FFChangeFilter(filtername)
-  let g:filefinder_filter = "FFFilter" . a:filtername
-  call FFRefreshContent()
-endfunction
 
 function! FFFilterMatchWithPatterns(currentpattern, filename)
   for pattern in split(a:currentpattern, "  *")
@@ -266,11 +301,6 @@ endfunction
 " }}}
 
 " Sort methods: {{{
-
-function! FFChangeSort(sortname)
-  let g:filefinder_sort = "FFSortBy" . a:sortname
-  call FFRefreshContent()
-endfunction
 
 function! FFSortByName(a, b)
   if a:a > a:b
