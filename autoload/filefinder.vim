@@ -176,9 +176,28 @@ endfunction
 function! filefinder#openselectedfile()
   normal gg
   if search("^>") > 0
-    let selectedfile = fnameescape(fnamemodify(b:rootdirectory . strpart(getline("."), 2), ':.'))
+    let path = b:rootdirectory . strpart(getline("."), 2)
     bd
-    exe (s:currentbufferisempty() ? 'e ' : 'tabnew ') . selectedfile
+
+    " If the file is already open just focus on it
+    let bufnum = bufnr(path)
+    if bufnum != -1
+      for l:i in range(tabpagenr('$'))
+        let bufidx = index(tabpagebuflist(l:i + 1), bufnum)
+        if bufidx != -1
+          " Tab found. Now, try to focus on the file
+          exe (l:i + 1) . "tabnext"
+          for noinfinityloop in range(100)
+            if bufnr("%") == bufnum | break | endif
+            wincmd w " Next buffer
+          endfor
+          return
+        end
+      endfor
+    end
+
+    " The file is not open yet. Open in a new tab or reuse the current buffer if empty
+    exe (s:currentbufferisempty() ? 'e ' : 'tabnew ') . fnameescape(fnamemodify(path, ':.'))
   endif
 endfunction
 
