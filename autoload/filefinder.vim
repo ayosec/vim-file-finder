@@ -31,6 +31,15 @@ endif
 
 function! filefinder#open()
 
+  " Save some options that doesn't obey the setlocal command
+  " When the buffer is closing restore the old values
+  let b:oldupdatetime = &updatetime
+  let b:oldlaststatus = &laststatus
+
+  au BufLeave <buffer> let &updatetime = b:oldupdatetime
+  au BufLeave <buffer> let &laststatus = b:oldlaststatus
+
+  " Reuse the current buffer if it is empty. If not, create a new tab
   if !empty(bufname("%")) || getbufvar("%", "&modified")
     tabnew
   endif
