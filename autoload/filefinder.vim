@@ -281,8 +281,14 @@ endfunction
 
 function! filefinder#filtermatchwithpatterns(currentpattern, filename)
   for pattern in split(a:currentpattern, "  *")
-    if match(a:filename, pattern) == -1
-      return 0
+    if pattern[0] == '-'
+      if match(a:filename, pattern[1:]) >= 0
+        return 0
+      endif
+    else
+      if match(a:filename, pattern) == -1
+        return 0
+      endif
     endif
   endfor
   return 1
