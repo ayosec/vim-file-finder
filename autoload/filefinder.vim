@@ -282,11 +282,10 @@ function! filefinder#updatecontent()
   silent! 2,$d
 
   " Search the files with the new pattern
-  let s:filterfn = function(g:filefinder#filter)
   let succeed = 1
   try
     for item in b:foundfiles
-      if call(s:filterfn, [l:currentpattern, item])
+      if {g:filefinder#filter}(l:currentpattern, item)
         call append(line("$"), "  " . item)
       endif
     endfor
