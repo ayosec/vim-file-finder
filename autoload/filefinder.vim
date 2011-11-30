@@ -29,6 +29,10 @@ endif
 
 " Main function: {{{
 
+function! s:currentbufferisempty()
+  return empty(bufname("%")) && !getbufvar("%", "&modified")
+endfunction
+
 function! filefinder#open()
 
   " Save some options that doesn't obey the setlocal command
@@ -40,7 +44,7 @@ function! filefinder#open()
   au BufLeave <buffer> let &laststatus = b:oldlaststatus
 
   " Reuse the current buffer if it is empty. If not, create a new tab
-  if !empty(bufname("%")) || getbufvar("%", "&modified")
+  if !s:currentbufferisempty()
     tabnew
   endif
 
@@ -172,10 +176,9 @@ endfunction
 function! filefinder#openselectedfile()
   normal gg
   if search("^>") > 0
-    let selectedfile = fnameescape(b:rootdirectory . strpart(getline("."), 2))
+    let selectedfile = fnameescape(fnamemodify(b:rootdirectory . strpart(getline("."), 2), ':.'))
     bd
-    echom "Open " . selectedfile . " in a new tab"
-    exe "tabnew " . selectedfile
+    exe (s:currentbufferisempty() ? 'e ' : 'tabnew ') . selectedfile
   endif
 endfunction
 
