@@ -35,14 +35,6 @@ endfunction
 
 function! filefinder#open()
 
-  " Save some options that doesn't obey the setlocal command
-  " When the buffer is closing restore the old values
-  let b:oldupdatetime = &updatetime
-  let b:oldlaststatus = &laststatus
-
-  au BufLeave <buffer> let &updatetime = b:oldupdatetime
-  au BufLeave <buffer> let &laststatus = b:oldlaststatus
-
   " The most-recent-access is built with the current buffers and the v:oldfiles (marks)
   " We have to create this list before create the new tab
   let l:recentfiles = []
@@ -62,6 +54,15 @@ function! filefinder#open()
   if !s:currentbufferisempty()
     tabnew
   endif
+
+  " Save some options that doesn't obey the setlocal command
+  " When the buffer is closing restore the old values
+  let b:oldupdatetime = &updatetime
+  let b:oldlaststatus = &laststatus
+
+  au BufLeave <buffer> let &updatetime = b:oldupdatetime
+  au BufLeave <buffer> let &laststatus = b:oldlaststatus
+
 
   " Save our list in a variable buffer (once the new buffer (tabnew) is created)
   let b:recentfiles = l:recentfiles
