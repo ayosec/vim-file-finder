@@ -129,8 +129,13 @@ function! filefinder#open()
   au BufLeave <buffer> :bd
   "au InsertLeave <buffer> :bd
 
+  " Preload the pattern, if any
+  if exists("g:filefinder#oldpattern")
+    call setline(1, g:filefinder#oldpattern)
+  end
+
   " Append blank spaces to the EOL to make easier to restore the cursor position after update the buffer content
-  1s/$/    /
+  1s/ *$/   /
   normal 0
 
   if exists("#User#FileFinderConfigure")
@@ -194,6 +199,9 @@ function! filefinder#refreshcontent()
 endfunction
 
 function! filefinder#openselectedfile()
+  " Save current pattern
+  let g:filefinder#oldpattern = getline(1)
+
   normal gg
   if search("^>") > 0
     let path = b:rootdirectory . strpart(getline("."), 2)
