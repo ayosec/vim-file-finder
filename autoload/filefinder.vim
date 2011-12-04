@@ -301,6 +301,8 @@ function! filefinder#updatecontent()
         call append(line("$"), prefix . item)
       endif
     endfor
+  catch /STOP/
+    " Just stop
   catch
     call setline(2, '!' . v:exception)
     silent! 3,$d
@@ -347,11 +349,27 @@ function! filefinder#filtermatchwithpatterns(currentpattern, filename)
         return 0
       endif
     else
-      if match(a:filename, pattern) == -1
-        return 0
+      let sepidx = stridx(pattern, ":")
+      if sepidx == -1
+        if match(a:filename, pattern) == -1
+          return 0
+        endif
+      else
+        let operator = strpart(pattern, 0, sepidx)
+        let argument = strpart(pattern, sepidx + 1)
+        if g:filefinder_match_{operator}(a:filename, argument) == 0
+          return 0
+        end
       endif
     endif
   endfor
+  return 1
+endfunction
+
+function! g:filefinder_match_limit(filename, argument)
+  if(line("$") > a:argument)
+    throw "STOP"
+  endif
   return 1
 endfunction
 
