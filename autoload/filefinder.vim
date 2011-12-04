@@ -95,8 +95,10 @@ function! filefinder#open()
   setlocal cursorline
   syn region SelectedFile start='^>' end='$'
   syn region ErrorMessage start='^!' end='$'
-  hi CursorLine cterm=NONE ctermbg=darkgray ctermfg=white guibg=darkgray guifg=white
-  hi SelectedFile cterm=NONE ctermbg=blue ctermfg=white guibg=blue guifg=white
+  syn region OpenFile start='^ +' end='$'
+  hi CursorLine cterm=none ctermbg=darkgray ctermfg=white guibg=darkgray guifg=white
+  hi SelectedFile cterm=none ctermbg=blue ctermfg=white guibg=blue guifg=white
+  hi def link OpenFile Identifier
   hi def link ErrorMessage Error
 
   " Timer to update the file list.
@@ -204,7 +206,7 @@ function! filefinder#openselectedfile()
 
   normal gg
   if search("^>") > 0
-    let path = b:rootdirectory . strpart(getline("."), 2)
+    let path = b:rootdirectory . strpart(getline("."), 3)
     bd
 
     " If the file is already open just focus on it
@@ -295,7 +297,8 @@ function! filefinder#updatecontent()
   try
     for item in b:foundfiles
       if {g:filefinder#filter}(l:currentpattern, item)
-        call append(line("$"), "  " . item)
+        let prefix = (bufnr(b:rootdirectory . item) == -1) ? "   " : " + "
+        call append(line("$"), prefix . item)
       endif
     endfor
   catch
