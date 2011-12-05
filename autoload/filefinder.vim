@@ -140,7 +140,7 @@ function! filefinder#open()
   " Preload the pattern, if any
   " Append blank spaces to the EOL to make easier to restore the cursor
   " position after update the buffer content
-  if exists("g:filefinder#oldpattern")
+  if exists("g:filefinder#oldpattern") && g:filefinder#oldpattern =~ "[^ ]"
     call setline(1, g:filefinder#oldpattern . "    ")
     normal $BEl
   else
