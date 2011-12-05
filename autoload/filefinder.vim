@@ -59,9 +59,10 @@ function! filefinder#open()
   " When the buffer is closing restore the old values
   let b:oldupdatetime = &updatetime
   let b:oldlaststatus = &laststatus
+  let b:oldlazyredraw = &lazyredraw
 
   au BufLeave <buffer> let &updatetime = b:oldupdatetime
-  au BufLeave <buffer> let &laststatus = b:oldlaststatus
+  au BufLeave <buffer> let &lazyredraw = b:oldlazyredraw
 
 
   " Save our list in a variable buffer (once the new buffer (tabnew) is created)
@@ -86,6 +87,7 @@ function! filefinder#open()
   file \<File\ selector\>
   setlocal statusline=%!filefinder#statusline()
   setlocal laststatus=2
+  setlocal lazyredraw
   setlocal buftype=nowrite
   setlocal bufhidden=delete
   setlocal noswapfile
