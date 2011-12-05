@@ -94,10 +94,12 @@ function! filefinder#open()
   " Colors
   setlocal cursorline
   syn region SelectedFile start='^>' end='$'
+  syn region FixedSelection start='^ >' end='$'
   syn region ErrorMessage start='^!' end='$'
   syn region OpenFile start='^ +' end='$'
   hi CursorLine cterm=none ctermbg=darkgray ctermfg=white guibg=darkgray guifg=white
   hi SelectedFile cterm=none ctermbg=blue ctermfg=white guibg=blue guifg=white
+  hi FixedSelection cterm=none ctermbg=lightblue ctermfg=black guibg=lightblue guifg=black
   hi def link OpenFile Identifier
   hi def link ErrorMessage Error
 
@@ -110,16 +112,20 @@ function! filefinder#open()
 
   " Key bindings to manage the file list
   inoremap <buffer> <Cr> <Esc>:call filefinder#openselectedfile()<Cr>
+  inoremap <buffer> <Tab> <C-o>:call filefinder#fixselection()<Cr>
   inoremap <buffer> <Up> <C-o>:call filefinder#moveselection(-1)<Cr>
   inoremap <buffer> <Down> <C-o>:call filefinder#moveselection(1)<Cr>
   inoremap <buffer> <PageUp> <C-o>:call filefinder#moveselection(-winheight("."))<Cr>
   inoremap <buffer> <PageDown> <C-o>:call filefinder#moveselection(winheight("."))<Cr>
+  inoremap <buffer> <C-a> <C-o>:2,$g/./normal 0lr>0<Cr>
 
   nnoremap <buffer> <Cr> :call filefinder#openselectedfile()<Cr>
+  nnoremap <buffer> <Tab> :call filefinder#fixselection()<Cr>
   nnoremap <buffer> <Up> :call filefinder#moveselection(-1)<Cr>
   nnoremap <buffer> <Down> :call filefinder#moveselection(1)<Cr>
   nnoremap <buffer> <PageUp> :call filefinder#moveselection(-winheight("."))<Cr>
   nnoremap <buffer> <PageDown> :call filefinder#moveselection(winheight("."))<Cr>
+  nnoremap <buffer> <C-a> :2,$g/./normal 0lr>0<Cr>
 
   " Sorting and filtering
   inoremap <buffer> <C-d> <C-o>:call filefinder#changesort()<Cr>
@@ -204,14 +210,25 @@ function! filefinder#refreshcontent()
 endfunction
 
 function! filefinder#openselectedfile()
+
+  let l:rootdirectory = b:rootdirectory
+
   " Save current pattern
   1s/ *$//
   let g:filefinder#oldpattern = getline(1)
 
-  normal gg
-  if search("^>") > 0
-    let path = b:rootdirectory . strpart(getline("."), 3)
-    bd
+  let oldreg = @h
+  let @h = ""
+  %g/^ *>/normal "HY
+  let l:files = split(@h, "\n")
+  let @h = oldreg
+
+  bd
+
+  for line in l:files
+    let path = l:rootdirectory . strpart(line, 3)
+
+    let foundopen = 0
 
     " If the file is already open just focus on it
     let bufnum = bufnr(path)
@@ -225,14 +242,31 @@ function! filefinder#openselectedfile()
             if bufnr("%") == bufnum | break | endif
             wincmd w " Next buffer
           endfor
-          return
+          let foundopen = 1
+          break
         end
       endfor
     end
 
     " The file is not open yet. Open in a new tab or reuse the current buffer if empty
-    exe (s:currentbufferisempty() ? 'e ' : 'tabnew ') . fnameescape(fnamemodify(path, ':.'))
+    if foundopen == 0
+      exe (s:currentbufferisempty() ? 'e ' : 'tabnew ') . fnameescape(fnamemodify(path, ':.'))
+    end
+  endfor
+endfunction
+
+function! filefinder#fixselection()
+  let oldpos = getpos(".")
+
+  if search("^>") > 0
+    if getline(".")[1] == ">"
+      normal 0lr |
+    else
+      normal 0lr>
+    endif
   endif
+
+  call setpos('.', oldpos)
 endfunction
 
 function! filefinder#moveselection(offset)
