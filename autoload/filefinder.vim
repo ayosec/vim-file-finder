@@ -62,6 +62,7 @@ function! filefinder#open()
   let b:oldlazyredraw = &lazyredraw
 
   au BufLeave <buffer> let &updatetime = b:oldupdatetime
+  au BufLeave <buffer> let &lazyredraw = b:oldlaststatus
   au BufLeave <buffer> let &lazyredraw = b:oldlazyredraw
 
 
