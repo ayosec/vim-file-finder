@@ -132,13 +132,16 @@ function! filefinder#open()
   "au InsertLeave <buffer> :bd
 
   " Preload the pattern, if any
+  " Append blank spaces to the EOL to make easier to restore the cursor
+  " position after update the buffer content
   if exists("g:filefinder#oldpattern")
-    call setline(1, g:filefinder#oldpattern)
+    call setline(1, g:filefinder#oldpattern . "    ")
+    normal $BEl
+  else
+    call setline(1, "    ")
+    normal 0
   end
 
-  " Append blank spaces to the EOL to make easier to restore the cursor position after update the buffer content
-  1s/ *$/   /
-  normal 0
 
   if exists("#User#FileFinderConfigure")
     " Users can have their own definitions with the autocmd
@@ -202,6 +205,7 @@ endfunction
 
 function! filefinder#openselectedfile()
   " Save current pattern
+  1s/ *$//
   let g:filefinder#oldpattern = getline(1)
 
   normal gg
