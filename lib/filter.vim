@@ -68,6 +68,16 @@ function! s:ReadFilesFromGit(command)
   return map(split(system(command), "\n"), 'gitroot . v:val')
 endfunction
 
+" Implementation for grep:param
+
+function! g:filefinder_match_grep(filename, argument)
+  for line in readfile(b:rootdirectory . a:filename)
+    if line =~? a:argument
+      return 1
+    end
+  endfor
+endfunction
+
 
 function! FFfiltermatchwithletters(currentpattern, filename)
   let pattern = substitute(a:currentpattern, "[[:space:]]*", "", "g")
