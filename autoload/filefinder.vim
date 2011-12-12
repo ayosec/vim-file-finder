@@ -10,6 +10,7 @@ exe "command! -nargs=1 FileFinderPart source " . expand("<sfile>:h") . "/../lib/
 FileFinderPart globals
 FileFinderPart helpers
 FileFinderPart builder
+FileFinderPart autocompl
 FileFinderPart filelist
 FileFinderPart selection
 FileFinderPart filter

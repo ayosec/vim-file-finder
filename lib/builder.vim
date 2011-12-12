@@ -81,21 +81,24 @@ function! FFopen()
   "au CursorHold <buffer> :bd
 
   " Key bindings to manage the file list
-  inoremap <buffer> <Cr> <Esc>:call FFopenselectedfile()<Cr>
-  inoremap <buffer> <Tab> <C-o>:call FFfixselection()<Cr>
-  inoremap <buffer> <Up> <C-o>:call FFmoveselection(-1)<Cr>
-  inoremap <buffer> <Down> <C-o>:call FFmoveselection(1)<Cr>
+  inoremap <buffer> <Cr> <C-r>=pumvisible() ? "\<lt>Space>" : "\<lt>Esc>:call FFopenselectedfile()\<lt>Cr>"<Cr>
+  inoremap <buffer> <Tab> <C-r>=FFexe("FFfixselection()")<Cr>
+  inoremap <buffer> <Up> <C-r>=pumvisible() ? "\<lt>C-p>" : FFexe("FFmoveselection(-1)")<Cr>
+  inoremap <buffer> <Down> <C-r>=pumvisible() ? "\<lt>C-n>" : FFexe("FFmoveselection(1)")<Cr>
   inoremap <buffer> <PageUp> <C-o>:call FFmoveselection(-winheight("."))<Cr>
   inoremap <buffer> <PageDown> <C-o>:call FFmoveselection(winheight("."))<Cr>
   inoremap <buffer> <C-a> <C-o>:2,$g/./normal 0lr>0<Cr><C-o>gg
+
+  " Autocomplete for params
+  inoremap <buffer> : :<C-r>=FFcompletecolon()<Cr>
 
   " With this combination we can avoid that a <Delete> at EOL joins the two
   " first lines
   inoremap <buffer> <Delete> #<Left><C-o>2x
 
   " Sorting and filtering
-  inoremap <buffer> <C-d> <C-o>:call FFchangesort()<Cr>
-  inoremap <buffer> <C-f> <C-o>:call FFchangefilter()<Cr>
+  inoremap <buffer> <C-d> <C-r>=FFexe("FFchangesort()")<Cr>
+  inoremap <buffer> <C-f> <C-r>=FFexe("FFchangefilter()")<Cr>
 
   " Don't keep the buffer if the focus is lost or <C-c> is pressed
   inoremap <buffer> <C-c> <Esc>:bd<Cr>
@@ -104,16 +107,9 @@ function! FFopen()
   "au InsertLeave <buffer> :bd
 
   " Preload the pattern, if any
-  " Append blank spaces to the EOL to make easier to restore the cursor
-  " position after update the buffer content
   if exists("g:FFoldpattern") && g:FFoldpattern =~ "[^ ]"
     call setline(1, g:FFoldpattern)
-    normal $BEl
-  else
-    call setline(1, "")
-    normal 0
   end
-
 
   if exists("#User#FileFinderConfigure")
     " Users can have their own definitions with the autocmd

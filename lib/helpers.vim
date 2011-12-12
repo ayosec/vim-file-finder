@@ -10,3 +10,12 @@ function! FFHcyclenext(list, item)
   return a:list[idx >= len(a:list) ? 0 : idx]
 endfunction
 
+function! FFexe(command)
+  exe ":call " . a:command
+
+  if line(".") > 1
+    normal 1G
+  endif
+
+  return ""
+endfunction
