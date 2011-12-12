@@ -77,7 +77,7 @@ function! FFopen()
   " The timer is a trick using the CursorHoldI event and a fake key combination
   inoremap <buffer> \\ <Esc>:call FFupdatecontent()<Cr>
   setlocal updatetime=50
-  au CursorHoldI <buffer> call feedkeys(b:marktorestorecursor . "\\\\\<Esc>gg0/" . b:marktorestorecursor . "\<Cr>" . len(b:marktorestorecursor) . "s")
+  au CursorHoldI <buffer> call feedkeys(b:marktorestorecursor . "\\\\\gg0/" . b:marktorestorecursor . "\<Cr>" . len(b:marktorestorecursor) . "s")
   "au CursorHold <buffer> :bd
 
   " Key bindings to manage the file list
