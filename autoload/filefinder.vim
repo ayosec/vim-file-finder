@@ -15,6 +15,7 @@ FileFinderPart filelist
 FileFinderPart selection
 FileFinderPart filter
 FileFinderPart sort
+FileFinderPart git
 
 "delcommand FileFinderPart
 

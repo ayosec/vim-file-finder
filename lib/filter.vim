@@ -36,38 +36,6 @@ function! g:filefinder_match_limit(filename, argument)
   return 1
 endfunction
 
-
-" Implementation for git:param
-" param can be
-"  .   files tracked by Git
-"  M   files with modifications
-function! g:filefinder_match_git(filename, argument)
-  let fullfilename = b:rootdirectory . a:filename
-
-  if a:argument == "." || a:argument == ""
-    if !exists("b:gitfiles")
-      let b:gitfiles = s:ReadFilesFromGit("git ls-tree HEAD --full-name -r --name-only %root" )
-    endif
-
-    return index(b:gitfiles, fullfilename) != -1
-
-  elseif tolower(a:argument) == "m"
-    if !exists("b:gitmodifiedfiles")
-      let b:gitmodifiedfiles = s:ReadFilesFromGit("git diff HEAD --name-only")
-    end
-
-    return index(b:gitmodifiedfiles, fullfilename) != -1
-  else
-    throw "Unknown value for git param"
-  endif
-endfunction
-
-function! s:ReadFilesFromGit(command)
-  let gitroot = system("git rev-parse --show-toplevel")[ : -2 ] . "/"
-  let command = substitute(a:command, "%root", gitroot, "g")
-  return map(split(system(command), "\n"), 'gitroot . v:val')
-endfunction
-
 " Implementation for grep:param
 
 function! g:filefinder_match_grep(filename, argument)
@@ -96,5 +64,4 @@ function! FFfiltermatchwithletters(currentpattern, filename)
   endwhile
   return 1
 endfunction
-
 

@@ -25,10 +25,6 @@ function! FFcompletecolon()
   return ""
 endfunction
 
-function! FFcomplete_git()
-  return [ { "word": ".", "menu": "Tracked files" }, { "word": "m", "menu": "Files with modifications" } ]
-endfunction
-
 function! FFcomplete_limit()
   return ["5", "10", "20", "50", "100"]
 endfunction
