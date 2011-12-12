@@ -19,7 +19,7 @@ function! FFfiltermatchwithpatterns(currentpattern, filename)
       else
         let operator = strpart(pattern, 0, sepidx)
         let argument = strpart(pattern, sepidx + 1)
-        if g:filefinder_match_{operator}(a:filename, argument) == 0
+        if FFmatch_{operator}(a:filename, argument) == 0
           return 0
         end
       endif
@@ -29,7 +29,7 @@ function! FFfiltermatchwithpatterns(currentpattern, filename)
 endfunction
 
 " Implementation for limit:N
-function! g:filefinder_match_limit(filename, argument)
+function! FFmatch_limit(filename, argument)
   if line("$") > a:argument
     throw "STOP"
   endif
@@ -38,7 +38,7 @@ endfunction
 
 " Implementation for grep:param
 
-function! g:filefinder_match_grep(filename, argument)
+function! FFmatch_grep(filename, argument)
   for line in readfile(b:rootdirectory . a:filename)
     if line =~? a:argument
       return 1

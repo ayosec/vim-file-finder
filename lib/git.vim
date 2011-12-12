@@ -2,7 +2,7 @@
 " Implementation for git:param.
 " Valid values can be seen in the body of FFcomplete_git()
 
-function! g:filefinder_match_git(filename, argument)
+function! FFmatch_git(filename, argument)
   let fullfilename = b:rootdirectory . a:filename
 
   if a:argument == "tracked" || a:argument == ""

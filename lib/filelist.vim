@@ -28,6 +28,9 @@ endfunction
 
 function! FFupdatecontent()
 
+  " Remove any possible ':' prefix
+  silen! 1s/\(^\| \):/\1/g
+
   " Read the current pattern, and remove the mark used to restore the cursor
   let l:currentpattern = substitute(getline(1), b:marktorestorecursor, "", "")
 

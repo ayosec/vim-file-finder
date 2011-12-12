@@ -11,6 +11,14 @@ function! FFcompletecolon()
   endwhile
 
   if param == ""
+    if !exists("b:completefuncs")
+      redir => funcnames
+      function
+      redir END
+      let b:completefuncs = map(filter(split(funcnames, "\n"), "v:val =~# 'FFmatch_'"), 'matchlist(v:val, "FFmatch_\\(\\a*\\)")[1]')
+    endif
+
+    call complete(col("."), b:completefuncs)
     return ""
   endif
 
