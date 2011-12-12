@@ -89,6 +89,10 @@ function! FFopen()
   inoremap <buffer> <PageDown> <C-o>:call FFmoveselection(winheight("."))<Cr>
   inoremap <buffer> <C-a> <C-o>:2,$g/./normal 0lr>0<Cr><C-o>gg
 
+  " With this combination we can avoid that a <Delete> at EOL joins the two
+  " first lines
+  inoremap <buffer> <Delete> #<Left><C-o>2x
+
   " Sorting and filtering
   inoremap <buffer> <C-d> <C-o>:call FFchangesort()<Cr>
   inoremap <buffer> <C-f> <C-o>:call FFchangefilter()<Cr>
