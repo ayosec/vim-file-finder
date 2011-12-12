@@ -89,14 +89,6 @@ function! FFopen()
   inoremap <buffer> <PageDown> <C-o>:call FFmoveselection(winheight("."))<Cr>
   inoremap <buffer> <C-a> <C-o>:2,$g/./normal 0lr>0<Cr><C-o>gg
 
-  nnoremap <buffer> <Cr> :call FFopenselectedfile()<Cr>
-  nnoremap <buffer> <Tab> :call FFfixselection()<Cr>
-  nnoremap <buffer> <Up> :call FFmoveselection(-1)<Cr>
-  nnoremap <buffer> <Down> :call FFmoveselection(1)<Cr>
-  nnoremap <buffer> <PageUp> :call FFmoveselection(-winheight("."))<Cr>
-  nnoremap <buffer> <PageDown> :call FFmoveselection(winheight("."))<Cr>
-  nnoremap <buffer> <C-a> :2,$g/./normal 0lr>0<Cr>gg
-
   " Sorting and filtering
   inoremap <buffer> <C-d> <C-o>:call FFchangesort()<Cr>
   inoremap <buffer> <C-f> <C-o>:call FFchangefilter()<Cr>
