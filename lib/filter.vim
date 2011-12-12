@@ -53,10 +53,10 @@ function! g:filefinder_match_git(filename, argument)
 
   elseif tolower(a:argument) == "m"
     if !exists("b:gitmodifiedfiles")
-      let b:gitfiles = s:ReadFilesFromGit("git diff HEAD --name-only")
+      let b:gitmodifiedfiles = s:ReadFilesFromGit("git diff HEAD --name-only")
     end
 
-    return index(b:gitfiles, fullfilename) != -1
+    return index(b:gitmodifiedfiles, fullfilename) != -1
   else
     throw "Unknown value for git param"
   endif
