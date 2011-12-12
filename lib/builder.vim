@@ -36,9 +36,10 @@ function! FFopen()
   let b:recentfiles = l:recentfiles
 
   " State
-  let b:prevpattern = ""
+  let b:prevpattern = "-"
   let b:hiddenlines = ""
   let b:resultslength = 0
+  let b:marktorestorecursor = "#-#-#"
 
   " Root directory. The name has to finish with an slash
   if exists("g:FFrootdir")
@@ -74,9 +75,9 @@ function! FFopen()
 
   " Timer to update the file list.
   " The timer is a trick using the CursorHoldI event and a fake key combination
-  inoremap <buffer> \\ <C-o>:call FFupdatecontent()<Cr>
+  inoremap <buffer> \\ <Esc>:call FFupdatecontent()<Cr>
   setlocal updatetime=50
-  au CursorHoldI <buffer> call feedkeys("\\\\")
+  au CursorHoldI <buffer> call feedkeys(b:marktorestorecursor . "\\\\\<Esc>gg0/" . b:marktorestorecursor . "\<Cr>" . len(b:marktorestorecursor) . "s")
   "au CursorHold <buffer> :bd
 
   " Key bindings to manage the file list
@@ -86,7 +87,7 @@ function! FFopen()
   inoremap <buffer> <Down> <C-o>:call FFmoveselection(1)<Cr>
   inoremap <buffer> <PageUp> <C-o>:call FFmoveselection(-winheight("."))<Cr>
   inoremap <buffer> <PageDown> <C-o>:call FFmoveselection(winheight("."))<Cr>
-  inoremap <buffer> <C-a> <C-o>:2,$g/./normal 0lr>0<Cr>
+  inoremap <buffer> <C-a> <C-o>:2,$g/./normal 0lr>0<Cr><C-o>gg
 
   nnoremap <buffer> <Cr> :call FFopenselectedfile()<Cr>
   nnoremap <buffer> <Tab> :call FFfixselection()<Cr>
@@ -94,7 +95,7 @@ function! FFopen()
   nnoremap <buffer> <Down> :call FFmoveselection(1)<Cr>
   nnoremap <buffer> <PageUp> :call FFmoveselection(-winheight("."))<Cr>
   nnoremap <buffer> <PageDown> :call FFmoveselection(winheight("."))<Cr>
-  nnoremap <buffer> <C-a> :2,$g/./normal 0lr>0<Cr>
+  nnoremap <buffer> <C-a> :2,$g/./normal 0lr>0<Cr>gg
 
   " Sorting and filtering
   inoremap <buffer> <C-d> <C-o>:call FFchangesort()<Cr>
@@ -110,10 +111,10 @@ function! FFopen()
   " Append blank spaces to the EOL to make easier to restore the cursor
   " position after update the buffer content
   if exists("g:FFoldpattern") && g:FFoldpattern =~ "[^ ]"
-    call setline(1, g:FFoldpattern . "    ")
+    call setline(1, g:FFoldpattern)
     normal $BEl
   else
-    call setline(1, "    ")
+    call setline(1, "")
     normal 0
   end
 
@@ -126,7 +127,9 @@ function! FFopen()
   call FFgeneratefilelist()
 
   " Time to find files!
-  startinsert
+  " Send an A command to start the insert mode at the end of the line
+  " The command «normal A» does not work
+  call feedkeys("A", "n")
 
 endfunction
 
