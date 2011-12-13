@@ -31,8 +31,11 @@ function! FFupdatecontent()
   " Remove any possible ':' prefix
   silen! 1s/\(^\| \):/\1/g
 
-  " Read the current pattern, and remove the mark used to restore the cursor
+  " Read the current pattern, and remove
+  " - The mark used to restore the cursor (b:marktorestorecursor)
+  " - Any possible comment (after the ## marks)
   let l:currentpattern = substitute(getline(1), b:marktorestorecursor, "", "")
+  let l:currentpattern = substitute(l:currentpattern, '##.*', "", "")
 
   " Avoid to update the list if the pattern is unmodified
   if b:prevpattern == l:currentpattern
