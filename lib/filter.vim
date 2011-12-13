@@ -46,6 +46,16 @@ function! FFmatch_grep(filename, argument)
   endfor
 endfunction
 
+" Implementation for mgrep:param
+
+function! FFmatch_mgrep(filename, argument)
+  for line in readfile(b:rootdirectory . a:filename)
+    if line =~# a:argument
+      return 1
+    end
+  endfor
+endfunction
+
 
 function! FFfiltermatchwithletters(currentpattern, filename)
   let pattern = substitute(a:currentpattern, "[[:space:]]*", "", "g")
