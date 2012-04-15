@@ -23,14 +23,11 @@ function! FFopen()
 
   " Save some options that doesn't obey the setlocal command
   " When the buffer is closing restore the old values
-  let b:oldupdatetime = &updatetime
   let b:oldlaststatus = &laststatus
   let b:oldlazyredraw = &lazyredraw
 
-  au BufLeave <buffer> let &updatetime = b:oldupdatetime
   au BufLeave <buffer> let &laststatus = b:oldlaststatus
   au BufLeave <buffer> let &lazyredraw = b:oldlazyredraw
-
 
   " Save our list in a variable buffer (once the new buffer (tabnew) is created)
   let b:recentfiles = l:recentfiles
@@ -39,7 +36,7 @@ function! FFopen()
   let b:prevpattern = "-"
   let b:hiddenlines = ""
   let b:resultslength = 0
-  let b:marktorestorecursor = "#-#-#"
+  let b:marktorestorecursor = "#####"
 
   " Root directory. The name has to finish with an slash
   if exists("g:FFrootdir")
@@ -73,12 +70,8 @@ function! FFopen()
   hi def link OpenFile Identifier
   hi def link ErrorMessage Error
 
-  " Timer to update the file list.
-  " The timer is a trick using the CursorHoldI event and a fake key combination
-  inoremap <buffer> \\ <Esc>:call FFupdatecontent()<Cr>
-  setlocal updatetime=50
-  au CursorHoldI <buffer> call feedkeys(b:marktorestorecursor . "\\\\\gg0/" . b:marktorestorecursor . "\<Cr>" . len(b:marktorestorecursor) . "s")
-  "au CursorHold <buffer> :bd
+  " Use \\ to request an update
+  exe "inoremap <buffer> \\\\ " . b:marktorestorecursor . "<Esc>:call FFupdatecontent()<Cr>"
 
   " Key bindings to manage the file list
   inoremap <buffer> <Cr> <C-r>=pumvisible() ? "\<lt>Space>" : "\<lt>Esc>:call FFopenselectedfile()\<lt>Cr>"<Cr>
@@ -104,6 +97,7 @@ function! FFopen()
   inoremap <buffer> <C-c> <Esc>:bd<Cr>
   nnoremap <buffer> <C-c> :bd<Cr>
   au BufLeave <buffer> :bd
+  au CursorMovedI <buffer> call FFcheckpattern()
   "au InsertLeave <buffer> :bd
 
   " Preload the pattern, if any
@@ -121,7 +115,7 @@ function! FFopen()
   " Time to find files!
   " Send an A command to start the insert mode at the end of the line
   " The command «normal A» does not work
-  call feedkeys("A", "n")
+  call feedkeys("A\\\\")
 
 endfunction
 
@@ -141,4 +135,20 @@ function! FFstatusline()
   let content .= "%=" . b:rootdirectory
 
   return content
+endfunction
+
+function! FFrestorecursor()
+  " Restore the cursor position
+  normal gg0
+  if search(b:marktorestorecursor) != 0
+    call feedkeys(len(b:marktorestorecursor) . "s")
+  endif
+endfunction
+
+function! FFcheckpattern()
+  let l:pattern = getline(1)
+  if b:prevpattern != l:pattern
+    let b:prevpattern = l:pattern
+    call feedkeys("\\\\")
+  end
 endfunction

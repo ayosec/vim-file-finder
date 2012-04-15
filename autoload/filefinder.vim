@@ -1,6 +1,6 @@
 " Vim File Finder
 " Maintainer:  Ayose Cazorla <ayosec@gmail.com>
-" Last Change: 2011 Dec 10
+" Last Change: 2012 Apr 15
 
 
 exe "command! -nargs=1 FileFinderPart source " . expand("<sfile>:h") . "/../lib/<args>.vim"
@@ -17,7 +17,7 @@ FileFinderPart filter
 FileFinderPart sort
 FileFinderPart git
 
-"delcommand FileFinderPart
+delcommand FileFinderPart
 
 function! filefinder#open()
   call FFopen()

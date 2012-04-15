@@ -37,13 +37,7 @@ function! FFupdatecontent()
   let l:currentpattern = substitute(getline(1), b:marktorestorecursor, "", "")
   let l:currentpattern = substitute(l:currentpattern, '##.*', "", "")
 
-  " Avoid to update the list if the pattern is unmodified
-  if b:prevpattern == l:currentpattern
-    return
-  endif
-
   " New state
-  let b:prevpattern = l:currentpattern
   let b:hiddenlines = ""
 
   " Erase old results, if any
@@ -73,5 +67,7 @@ function! FFupdatecontent()
   if succeed && line("$") > 1
     normal 2G0r>
   endif
+
+  call FFrestorecursor()
 endfunction
 
