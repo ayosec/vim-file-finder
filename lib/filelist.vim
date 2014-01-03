@@ -50,6 +50,10 @@ function! FFupdatecontent()
       if {g:FFfilter}(l:currentpattern, item)
         let prefix = (bufnr(b:rootdirectory . item) == -1) ? "   " : " + "
         call append(line("$"), prefix . item)
+
+        if line("$") > 100
+          throw "STOP"
+        endif
       endif
     endfor
   catch /STOP/
