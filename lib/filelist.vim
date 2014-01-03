@@ -13,7 +13,12 @@ function! FFgeneratefilelist()
   let b:foundfiles = []
 
   " Sort them
-  let l:files = split(globpath(b:rootdirectory, "**"), "\n")
+  if b:FFonlygitfiles
+    let l:files = split(system("git ls-files"), "\n")
+  else
+    let l:files = split(globpath(b:rootdirectory, "**"), "\n")
+  end
+
   call sort(files, g:FFsort)
 
   for item in l:files
