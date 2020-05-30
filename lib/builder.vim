@@ -48,12 +48,6 @@ function! FFopen()
     endif
   end
 
-  if exists("g:FFonlygitfiles")
-    let b:FFonlygitfiles = g:FFonlygitfiles
-  else
-    let b:FFonlygitfiles = 0
-  endif
-
   " Dialog-like buffer
   file \<File\ selector\>
   setlocal statusline=%!FFstatusline()
