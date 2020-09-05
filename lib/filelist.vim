@@ -13,7 +13,7 @@ function! FFgeneratefilelist()
   let b:foundfiles = []
 
   " Sort them
-  let l:files = split(system("rg --files -0"), "\0")
+  let l:files = split(system("rg --files"), "\n")
 
   call sort(files, g:FFsort)
 
