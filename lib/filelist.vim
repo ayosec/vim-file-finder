@@ -8,23 +8,14 @@ endfunction
 
 
 function! FFgeneratefilelist()
-  " Generate file list. Exclude directories.
-  " Use wildignore to exclude files
-  let b:foundfiles = []
-
   " Sort them
-  let l:files = split(system("rg --files"), "\n")
+  let l:files = split(system("rg --files --hidden --glob='!.git'"), "\n")
 
-  call sort(files, g:FFsort)
+  if len(files) < 1000
+    call sort(files, g:FFsort)
+  endif
 
-  for item in l:files
-    if isdirectory(item) == 0
-      if stridx(item, b:rootdirectory) == 0
-        let item = strpart(item, len(b:rootdirectory))
-      endif
-      call add(b:foundfiles, item)
-    endif
-  endfor
+  let b:foundfiles = l:files
 endfunction
 
 function! FFupdatecontent()
